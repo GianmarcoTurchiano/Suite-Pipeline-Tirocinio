@@ -1,4 +1,4 @@
-## Installazione
+## Preparazione
 
 1. Installare Java e GCC.
 
@@ -7,19 +7,16 @@
     sudo apt install gcc
     ```
 
-2. Una volta scaricato il contenuto della presente repository, spostarlo nel percorso che si preferisce (d'ora in poi, `CHOSEN_PATH`).
+2. Scaricare il contenuto della presente repository e spostarlo nel percorso che si preferisce (d'ora in poi, `CHOSEN_PATH`).
 
-3. Spostarsi nel percorso scelto.
+3. Scaricare AMIE [^1] ([questa](https://github.com/dig-team/amie/releases/tag/3.0) è la versione consigliata), rinominare il file in `amie-init.jar` e spostarlo in `CHOSEN_PATH/scripts/utils/jars`.
 
-    ```
-    cd CHOSEN_PATH
-    ```
-
-4. Installare l'ambiente virtuale. Ci sono due opzioni:
+4. Installare un ambiente virtuale in Python. Ci sono due opzioni:
 
     * Con ANACONDA
 
         ```
+        cd CHOSEN_PATH
         conda env create -f environment.yml
         conda activate pipeline_env
         ```
@@ -33,12 +30,10 @@
         python3 -m venv pipeline_env --python="/usr/bin/python3.8"
         . pipeline_env/bin/activate
         pip install --upgrade pip
-        pip install -r requirements.txt
+        pip install -r CHOSEN_PATH/requirements.txt
         ```
 
-5. Dopo aver [scaricato](https://github.com/dig-team/amie/releases/tag/3.0) AMIE [^1], rinominare il file in `amie-init.jar` e spostarlo in `CHOSEN_PATH/scripts/utils/jars`.
-
-6. Installare Elliot [^2].
+5. Installare Elliot [^2].
     
     *Scegliere un percorso dove installare Elliot (d'ora in poi, `ELLIOT_PATH`)*
 
@@ -59,7 +54,7 @@
     * Con ANACONDA
 
         ```
-        conda activate pipeline
+        conda activate pipeline_env
         ```
 
     * Con VENV
@@ -105,12 +100,11 @@ La presente suite è composta da una serie script, ciascuno dei quali corrispond
     python .\runKaleAmarElliot.py DATASET_NAME [AMIE_SETTINGS] [RULES_FILTER] [KALE_SETTINGS] [AMAR_SETTINGS]
     ```
 
-Questi script in particolare realizzano delle macro-fasi, cioè eseguono in sequenza alcune fasi della pipeline che sono strettamente correlate tra loro. Per esempio, oltre a `runKaleAmarElliot.py`, ci sono anche `runKale.py`, `runAmar.py` e `runElliot.py`. Tali script minori possono comunque tornare utili, magari quando gli script più complessi non riescono a completare tutte le fasi a cui corrispondono. Se `runKaleAmarElliot.py` completasse la fase legata a KALE, per poi interrompersi per problemi tecnici (tipicamente, assenza di sufficiente memoria allocabile), invece di rieseguire lo stesso script, sarebbe molto più conveniente riprendere il processo da dove si è interrotto lanciando piuttosto `runAmarElliot.py`.
+Questi script in particolare realizzano delle macro-fasi della pipeline, cioè eseguono in sequenza alcune fasi che è semplicemente conveniente concatenare in maniera automatica tra loro. Per esempio, eseguire `runKaleAmarElliot.py` ha gli stessi effetti di eseguire manualmente, uno dopo l'altro, gli script `runKale.py`, `runAmar.py` e `runElliot.py`. Tali script minori possono comunque tornare utili quando gli script più complessi non riescono a completare tutte le fasi a cui corrispondono. Se magari `runKaleAmarElliot.py` completasse la fase legata a KALE, per poi terminare prematuramente (tipicamente, a causa di insufficiente memoria allocabile), si potrebbe eseguire `runAmarElliot.py` (che combina gli effetti di `runAmar.py` e `runElliot.py`) per riprendere il processo da dove si era interrotto.
 
 ### Parametri
 
-I valori di default sono definiti nei file che si trovano nella cartella `CHOSEN_PATH/scripts/utils/defaultValues`. Tali valori sono liberamente modificabili, o addirittura eliminabili, ma i file in questione devono obbligatoriamente esistere e devono risultare essere dei JSON validi. Notare pure che si è scelto di rendere impossibile definire valori di default per i parametri di tipo `bool`, per timore che ciò potesse risultare confusionario per gli utenti. I parametri per i quali non sono definiti valori di default, o per i quali il valore di default indicato è `null`, devono obbligatoriamente essere impostati da linea di comando, nel momento in cui si esegue uno script che li coinvolge.
-Segue un elenco dei vari parametri.
+I valori di default che vengono assegnati ai parametri descritti di seguito, sono definiti nei file che si trovano nella cartella `CHOSEN_PATH/scripts/utils/defaultValues`. Tali valori sono liberamente modificabili, o addirittura eliminabili, ma i file in questione devono obbligatoriamente esistere e devono risultare essere dei JSON validi. Notare pure che si è scelto di rendere impossibile definire valori di default per i parametri di tipo `bool`, per timore che ciò potesse risultare confusionario per gli utenti di questi script. I parametri per i quali non sono definiti valori di default, o per i quali il valore di default indicato è `null`, devono obbligatoriamente essere impostati da linea di comando, quando si esegue uno script che li coinvolge.
 
 `AMIE_SETTINGS`
 
@@ -195,13 +189,12 @@ I valori di default sono definiti in `amarSettings.json`:
 
 ## Esempi d'uso
 
-Una volta che ci si è spostati nella cartella `CHOSEN_PATH/scripts`, data l'esistenza di una cartella `CHOSEN_PATH/datasets/dbbook` che rispetti i requisiti precedentemente indicati, ecco come questi script potrebbero essere utilizzati.
+Una volta che ci si è spostati nella cartella `CHOSEN_PATH/scripts`, data l'esistenza di una cartella `CHOSEN_PATH/datasets/dbbook` i cui contenuti che rispettano i requisiti precedentemente indicati, ecco come questi script potrebbero essere utilizzati.
 
 ```
 conda activate pipeline_env
 
 python initDataset.py dbbook
-
 python runKaleAmarElliot.py dbbook --iterations 1 --skip 1 --dims 256 512 768 --top 10 20
 
 python mineAndGroundRules.py dbbook --maxad 3
@@ -215,25 +208,24 @@ python runKaleAmarElliot.py dbbook --maxad 3 --minStdConfidence 0.2 --iterations
 
 * Gli script danno per scontato che le uniche due relazioni "user-item" possano essere `like` e `dislike`. Tutte le altre sono automaticamente considerate relazioni "item-prop".
 * La relazione `dislike` può in realtà essere assente da `mapping_relations.tsv`, ma la presenza della relazione `like` nel medesimo file è assolutamente mandatoria. Inoltre, ha ovviamente poco senso utilizzare questi script su dataset che non presentano almeno quella specifica relazione "user-item" nelle triple.
-* Eseguire la funzione `runElliot()` (definita in `runElliot.py` e chiamata pure in `runKaleAmarElliot.py` e in `runAmarElliot.py`) più di una volta non elimina i file di output precedentemente prodotti.
+* Eseguire la funzione `runElliot()` (definita in `runElliot.py` e chiamata pure in `runKaleAmarElliot.py` e in `runAmarElliot.py`) più di una volta con gli stessi parametri non elimina i file di output precedentemente prodotti.
 * Se si intende eseguire la funzione `runElliot()`, assicurarsi di star utilizzando Python 3.8 (dovrebbe essere automaticamente impostato se si installa `environment.yml` con Anaconda), poiché s'è osservato che il framework in questione semplicemente non funziona con versioni successive di Python.
-* I contenuti della cartella `CHOSEN_PATH/src/kale` sono irrilevanti all'esecuzione degli script. Tale cartella contiene solo il codice (non prodotto, bensì solo leggermente modificato, dal sottoscritto) dal quale sono stati esportati la maggior parte dei file `.jar` che vengono adoperati durante la pipeline.
-* Per quanto riguarda specificatamente gli script `runKale.py`, `runAmar.py`, `runElliot.py`, `runAmarElliot.py`, `runKaleAmarElliot.py`, i parametri appartenenti ad `AMIE_SETTINGS` non vengono inizializzati ai valori di default, perché sono opzionali (in questo modo, se `--maxad` non viene impostato, viene inizializzata la pipeline senza regole). Di conseguenza, sempre per quegli script, se `--maxad` non viene impostato, vengono CORRETTAMENTE ignorati i seguenti parametri (nonostante possano comunque risultare impostati):
+* I contenuti della cartella `CHOSEN_PATH/src/kale` sono irrilevanti all'esecuzione degli script. Tale cartella contiene solo il codice (non prodotto, bensì solo leggermente modificato, dal sottoscritto) dal quale sono stati esportati la maggior parte dei file `.jar` che vengono adoperati durante la pipeline (per maggiori informazioni, leggere [qui](scripts/utils/jars/readme.md)).
+* Per quanto riguarda specificatamente gli script `runKale.py`, `runAmar.py`, `runElliot.py`, `runAmarElliot.py`, `runKaleAmarElliot.py`, i parametri appartenenti ad `AMIE_SETTINGS` non vengono inizializzati ai valori di default, perché sono opzionali (se `--maxad` non viene impostato, viene inizializzata la pipeline senza regole). Di conseguenza, sempre per quegli script, se `--maxad` non viene impostato, vengono CORRETTAMENTE ignorati i seguenti parametri (nonostante possano comunque risultare impostati):
     * tutti i parametri appartenenti a `RULES_FILTER`;
     * il parametro `weight` appartenente a `KALE_SETTINGS`.
 
 ## Problemi
 
 * Eseguire `runKale.py` o `runKaleAmarElliot.py` con `--maxad` impostato e con `--itemProperties` non impostato, causa un malfunzionamento. Ciò è probabilmente dovuto al fatto che si dà in input al processo un file `relationid.txt` che fa riferimento solo alle relazioni "user-item", quando i file `groundings.txt` fanno riferimento anche alle relazioni "item-prop". Non si è ancora risolto il problema semplicemente perché per il momento non è stato necessario eseguire la pipeline con impostazioni simili. 
-* Se il file `groundings.txt` è troppo piccolo (?), l'esecuzione di `/scripts/utils/jars/KALEJointProgram.jar` fallisce. Ciò succede, per esempio, sul sottoinsieme delle regole estratte da "dbbook", inizializzato con `--maxad 3 --minStdConfidence 0.7`. Non si è investigato ulteriormente sulla causa, poiché il problema era irrilevante rispetto ai compiti a me assegnati e si è presentato solo durante un test fine a sé stesso.
+* Se il file `groundings.txt` è troppo piccolo (?), l'esecuzione di `/scripts/utils/jars/KALEJointProgram.jar` fallisce. Ciò succede, per esempio, sul sottoinsieme delle regole estratte da "dbbook", inizializzato con `--maxad 3 --minStdConfidence 0.7`. Non si è investigato ulteriormente sulla causa, poiché questo problema è irrilevante rispetto ai compiti a me assegnati e si è presentato solo durante un test fine a sé stesso.
     ```
     java.lang.NullPointerException
         at kale.joint.StochasticUpdate.stochasticIteration(StochasticUpdate.java:87)
         at kale.joint.KALEJointModel2.TransE_Learn(KALEJointModel2.java:211)
         at kale.joint.KALEProgram2.main(KALEProgram2.java:94)
     ```
-* Se il processo Python lanciato richiede troppa memoria, un `SIGKILL` (che, per definizione, è impossibile da catturare e gestire) lo fa immediatamente interrompere. In quei casi, il programma non arriva dunque a mostrare la schermata riepilogativa del processo, dove appunto segnalarebbe che si è verificato qualche errore. Ciò può tipicamente avvenire durante l'esecuzione della funzione `runAmar()` (definita in `runAmar.py` e chiamata pure in `runKaleAmarElliot.py` e in `runAmarElliot.py`).
-* Durante l'esecuzione di `KALEJointProgram.jar`, inizializzata dalla funzione `runKale()` (definita in `runKale.py` e chiamata pure in `runKaleAmarElliot.py`) può capitare che un `SIGSEGV` interrompa il processo. Quando ciò succede, la causa è quasi certamente (se non proprio sicuramente) la mancanza di sufficiente memoria allocabile.
+* Se un processo Python richiede troppa memoria, un `SIGKILL` (che, per definizione, è impossibile da catturare e gestire) lo fa immediatamente interrompere. In quei casi, gli script non arrivano dunque a mostrare la schermata riepilogativa del processo, dove appunto segnalarebbe che si sono verificati degli errori. Ciò può tipicamente avvenire durante l'esecuzione della funzione `runAmar()` (definita in `runAmar.py` e chiamata pure in `runKaleAmarElliot.py` e in `runAmarElliot.py`).
 * Le funzioni `runAmar()` e `runElliot()` hanno una gestione degli errori assai grossolana: se una qualsiasi `Exception` (classe built-in di Python) viene intercettata all'interno di quelle funzioni, viene emessa una generica `AmarException` o `ElliotException`, che può risultare poco indicativa del problema riscontrato.
 
 ## Possibili miglioramenti
@@ -247,15 +239,15 @@ python runKaleAmarElliot.py dbbook --maxad 3 --minStdConfidence 0.2 --iterations
 * Permettere di dare in input un elenco delle relazioni "user-item" che non siano `like`, oppure rendere obbligatoria la presenza nel dataset importato anche dei file `mapping_items.tsv` e `mapping_props.tsv`, così che queste informazioni possano essere inferite dalle triple (contenute nel file `kale_train.tsv`). 
 * Permettere di dare in input agli script il percorso di un file che descriva i valori da assegnare ai vari parametri (per rendere gli esperimenti più facilmente riproducibili).
 * In generale, implementare una più rigorosa gestione degli errori, così da evitare completamente messaggi criptici.
-* Trovare un modo più sofisticato per gestire la memoria (quale?), così da gestire l'impossibilità di allocazione in modo più aggraziato (anche solo mostrando un messaggio di errore più comprensibile), evitando quindi `SIGKILL` improvvisi.
+* Trovare un modo più sofisticato per gestire la memoria (quale?), così da gestire l'impossibilità di allocazione in modo più aggraziato (anche solo mostrando un messaggio di errore più comprensibile) ed evitando `SIGKILL` improvvisi.
 * Rendere effettivamente possibile eseguire `runKale.py` o `runKaleAmarElliot.py` con `--maxad` impostato e con `--itemProperties` non impostato.
 * Eliminare l'output precedente ogni volta che si esegue `runElliot()` (per evitare confusione nella cartella corrispondente).
-* Il flusso di esecuzione di alcuni degli script può finire per valutare inutilmente più di una volta il metodo di istanza `AmieSettings::areValid()`. Si potrebbe fare in modo che l'espressione in questione venga valutata una sola volta (all'inizio del programma) e "impacchettarne" i risultati corrispondenti in un'istanza di una specializzazione della classe `KaleSettings` (per esempio, un eventuale `KaleJointSettings` potrebbe contenere un override di un eventuale metodo virtuale `getJarFile()`, che fornirebbe il nome del corretto programma da eseguire, o qualcosa del genere).
+* Il flusso di esecuzione di alcuni degli script può finire per valutare inutilmente più di una volta il metodo di istanza `AmieSettings::areValid()`. Si potrebbe fare in modo che l'espressione in questione venga valutata una sola volta (all'inizio del programma) e "impacchettarne" i valori corrispondenti in un'istanza di classe `KaleSettings` (per esempio, scegliendo di adottare un approccio OOP, un'eventuale specializzazione `KaleJointSettings` potrebbe contenere un override di un eventuale metodo virtuale `getJarFile()`, che fornirebbe il nome del corretto programma da eseguire).
 * Utilizzare un vero e proprio database (forse persino uno di tipo relazionale potrebbe essere opportuno), invece di una serie di file e cartelle (e se proprio necessario, creare delle infrastrutture che permettano di esportare certe moli di dati nei vari schemi TSV attualmente impiegati).
 * Forse sarebbe meno confusionario definire distintamente un `runKaleJoint.py` e un `runKaleTrip.py`, e similari, così che solo il primo abbia tra i suoi parametri `AMIE_SETTINGS` e `RULES_FILTER`.
 * Definire una variabile d'ambiente che specifichi la posizione della cartella `/datasets`, invece di assumere che si trovi in `/scripts/../`.
 * Parallelizzare le diverse fasi di `runAmarElliot.py` e `runKaleAmarElliot.py`. Per esempio, una volta che KALE è concluso su una dimensione, potrebbe essere possibile sganciare un nuovo processo che esegua AMAR ed Elliot in sequenza su quella dimensione, mentre KALE sulla dimensione successiva potrebbe essere contemporaneamente eseguito sul processo principale.
-    * Ciò potrebbe essere poco utile, a causa degli elevati requisiti di memoria che hanno sia KALE che AMAR, che potrebbero quindi finire per contendersi lo spazio allocabile, causando errori sulle macchine meno performanti. Però magari questa potrebbe comunque essere un'opzione attivabile tramite flag?
+    * Ciò potrebbe essere poco utile, a causa degli elevati requisiti di memoria che hanno sia KALE che AMAR, che potrebbero quindi finire per contendersi lo spazio allocabile, causando malfunzionamenti sulle macchine non adeguatamente equipaggiate. Però,l magari questa potrebbe comunque essere un'opzione attivabile facoltativamente tramite flag?
 
 [^1]: https://github.com/dig-team/amie
 [^2]: https://github.com/sisinflab/elliot/
