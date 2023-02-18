@@ -150,11 +150,14 @@ def getMappingRelationsFilePath(datasetFolderName: str):
 def getNoRulesFolderPath(datasetFolderName: str, *argv):
     return getDatasetFolderPath(datasetFolderName, folderNames.NO_RULES, *argv)
 
+def getNoRulesEmbeddingsFolderPath(datasetFolderName: str, *argv):
+    return getNoRulesFolderPath(datasetFolderName, folderNames.EMBEDDINGS, *argv)
+
 def getEmbeddingsFolderPath(datasetFolderName: str, amieSettings: AmieSettings, rulesFilter: RulesFilter, *argv):
     if amieSettings.areValid():
         return getRulesSubsetFolderPath(datasetFolderName, amieSettings, rulesFilter, folderNames.EMBEDDINGS, *argv)
 
-    return getNoRulesFolderPath(datasetFolderName, folderNames.EMBEDDINGS, *argv)
+    return getNoRulesEmbeddingsFolderPath(datasetFolderName, *argv)
 
 def getItemPropertiesFolderPath(datasetFolderName: str, amieSettings: AmieSettings, rulesFilter: RulesFilter, kaleSettings: KaleSettings, *argv):
     return getEmbeddingsFolderPath(datasetFolderName, amieSettings, rulesFilter, kaleSettings.itemPropertiesFolderName, *argv)
@@ -203,3 +206,15 @@ def getElliotResultsFolderPath(datasetFolderName: str, amieSettings: AmieSetting
 
 def getElliotSettingsFilePath(datasetFolderName: str, amieSettings: AmieSettings, rulesFilter: RulesFilter, kaleSettings: KaleSettings, dimension: int, topK: int):
     return getElliotFolderPath(datasetFolderName, amieSettings, rulesFilter, kaleSettings, dimension, topK, fileNames.ELLIOT_SETTINGS)
+
+def getComparisonsFolderPath(datasetFolderName: str, *argv):
+    return getDatasetFolderPath(datasetFolderName, folderNames.COMPARISONS, *argv)
+
+def getComparisonsPredictionsFolderPath(datasetFolderName: str, dim: str, top: str, *argv):
+    return getComparisonsFolderPath(datasetFolderName, dim, top, folderNames.PREDICTIONS, *argv)
+
+def getComparisonsElliotFolderPath(datasetFolderName: str, dim: str, top: str, *argv):
+    return getComparisonsFolderPath(datasetFolderName, dim, top, folderNames.ELLIOT, *argv)
+
+def getComparisonsElliotSettingsFilePath(datasetFolderName: str, dim: str, top: str):
+    return getComparisonsFolderPath(datasetFolderName, dim, top, fileNames.ELLIOT_SETTINGS)

@@ -17,5 +17,6 @@
 	"DIM_PREFIX": "dim",
 	"TOP_PREFIX": "top",
     "DEFAULT_VALUES": "defaultValues",
-    "KALE_CONFIGURATION_INFIX": "-"
+    "KALE_CONFIGURATION_INFIX": "-",
+    "COMPARISONS": "comparisons"
 }
