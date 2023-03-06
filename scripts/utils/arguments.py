@@ -1,7 +1,7 @@
 import argparse
 
 import pandas as pd
-from utils.symbols import fileNames, folderNames, rulesExcelSymbols, getKaleConfigurationFolderName, USER_ITEM_FOLDER_NAME, USER_ITEM_PROP_FOLDER_NAME, DATASET_FOLDER_NAME_KEY, MAX_AD_FLAG, M_D_FLAG, DIMS_FLAG, M_GE_FLAG, M_GR_FLAG, SKIP_FLAG, M_D_FLAG_SHORT, TOP_K_FLAG, WEIGHT_FLAG, LIKE_ONLY_FLAG, ITERATIONS_FLAG, MINI_BATCH_FLAG, MIN_BODY_SIZE_FLAG, MIN_HEAD_COVERAGE_FLAG, WITH_ITEM_PROPERTIES_FLAG, MIN_PCA_BODY_SIZE_FLAG, MIN_PCA_CONFIDENCE_FLAG, MIN_STD_CONFIDENCE_FLAG, MIN_FUNCTIONAL_VARIABLE_FLAG, MIN_POSITIVE_EXAMPLES_FLAG
+from utils.symbols import fileNames, folderNames, rulesExcelSymbols, getKaleConfigurationFolderName, USER_ITEM_FOLDER_NAME, USER_ITEM_PROP_FOLDER_NAME, DATASET_FOLDER_NAME_KEY, MAX_AD_FLAG, M_D_FLAG, DIMS_FLAG, M_GE_FLAG, M_GR_FLAG, SKIP_FLAG, TOP_K_FLAG, WEIGHT_FLAG, LIKE_ONLY_FLAG, ITERATIONS_FLAG, MINI_BATCH_FLAG, MIN_BODY_SIZE_FLAG, MIN_HEAD_COVERAGE_FLAG, WITH_ITEM_PROPERTIES_FLAG, MIN_PCA_BODY_SIZE_FLAG, MIN_PCA_CONFIDENCE_FLAG, MIN_STD_CONFIDENCE_FLAG, MIN_POSITIVE_EXAMPLES_FLAG, ALL_ITEMS_FLAG, CUTOFF_FLAG
 from utils.common import loadJsonFileFromUtilsFolder
 
 class _BaseSettings:
@@ -118,9 +118,17 @@ class RulesFilter(_BaseSettings):
 
 class AmarSettings(_BaseSettings):
     topK: list
+    allItems: bool
 
     def __init__(self, args: dict):
         self.topK = self._extract(args, TOP_K_FLAG)
+        self.allItems = self._extract(args, ALL_ITEMS_FLAG)
+
+class ElliotSettings(_BaseSettings):
+    cutoff: int
+
+    def __init__(self, args: dict):
+        self.cutoff = self._extract(args, CUTOFF_FLAG)
 
 def _loadDefaultValues(fileName: str):
     return loadJsonFileFromUtilsFolder(folderNames.DEFAULT_VALUES, fileName, "default values")
@@ -174,7 +182,14 @@ class Arguments:
 
     def addAmarSettingsArguments(self):
         amarSettingsDefault = _loadDefaultValues(fileNames.AMAR_SETTINGS)
+
         self.__addArgument(amarSettingsDefault, TOP_K_FLAG, int, "list of top Ks", "+")
+        self.__parser.add_argument(f"--{ALL_ITEMS_FLAG}", action="store_true", help="Whether to use triples from the train set instead of those from the test set for the predictions.")
+
+    def addElliotSettingsArguments(self):
+        amarSettingsDefault = _loadDefaultValues(fileNames.ELLIOT_ARG_SETTINGS)
+
+        self.__parser.add_argument(f"--{CUTOFF_FLAG}", type=int, help="")
 
     def parse(self):
         args = vars(self.__parser.parse_args())

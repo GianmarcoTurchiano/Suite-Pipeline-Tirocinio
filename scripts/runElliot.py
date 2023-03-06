@@ -1,20 +1,24 @@
 import os
-from utils.arguments import AmieSettings, Arguments, KaleSettings, RulesFilter, AmarSettings
+from utils.arguments import AmieSettings, Arguments, KaleSettings, RulesFilter, AmarSettings, ElliotSettings
 from elliot.run import run_experiment
 from utils.exceptions import ElliotException
 from utils.forEachEmbeddingDimension import forEachEmbeddingDimension
-from utils.paths import getUserItemAmarTestLikeOnlyFilePath, getUserItemAmarTrainFilePath, getTopPredictionsFolderPath, getElliotOutputFolderPath, getElliotSettingsFilePath
+from utils.paths import getUserItemAmarAllItemsFilePath, getUserItemAmarTestLikeOnlyFilePath, getUserItemAmarTrainFilePath, getTopPredictionsFolderPath, getElliotOutputFolderPath, getElliotSettingsFilePath
 import yaml
 
-def runElliot(datasetFolderName: str, rulesFilter: RulesFilter, kaleSettings: KaleSettings, amarSettings: AmarSettings, dimension: int,amieSettings: AmieSettings):
+def runElliot(datasetFolderName: str, rulesFilter: RulesFilter, kaleSettings: KaleSettings, amarSettings: AmarSettings, elliotSettings: ElliotSettings, dimension: int,amieSettings: AmieSettings):
     amarTrainPath = getUserItemAmarTrainFilePath(datasetFolderName)
-    amarTestPath = getUserItemAmarTestLikeOnlyFilePath(datasetFolderName)
+
+    if amarSettings.allItems:
+        amarTestPath = getUserItemAmarAllItemsFilePath(datasetFolderName)
+    else:
+        amarTestPath = getUserItemAmarTestLikeOnlyFilePath(datasetFolderName)
         
     for k in amarSettings.topK:
         try:
-            topPredictionsFolderPath = getTopPredictionsFolderPath(datasetFolderName, amieSettings, rulesFilter, kaleSettings, dimension, k)
+            topPredictionsFolderPath = getTopPredictionsFolderPath(datasetFolderName, amieSettings, rulesFilter, kaleSettings, amarSettings, dimension, k)
 
-            elliotOutputPath = getElliotOutputFolderPath(datasetFolderName, amieSettings, rulesFilter, kaleSettings, dimension, k)
+            elliotOutputPath = getElliotOutputFolderPath(datasetFolderName, amieSettings, rulesFilter, kaleSettings, amarSettings, dimension, k)
             
             if not os.path.exists(elliotOutputPath):
                 os.makedirs(elliotOutputPath)
@@ -40,11 +44,11 @@ def runElliot(datasetFolderName: str, rulesFilter: RulesFilter, kaleSettings: Ka
                             "folder": str(topPredictionsFolderPath)
                         }
                     },
-                    "top_k": k
+                    "top_k": elliotSettings.cutoff if elliotSettings.cutoff else k
                 }
             }
 
-            elliotConfigFilePath = getElliotSettingsFilePath(datasetFolderName, amieSettings, rulesFilter, kaleSettings, dimension, k)
+            elliotConfigFilePath = getElliotSettingsFilePath(datasetFolderName, amieSettings, rulesFilter, kaleSettings, amarSettings, dimension, k)
 
             with open(elliotConfigFilePath, "w") as f:
                 yaml.dump(config, f)
@@ -60,6 +64,7 @@ if __name__ == "__main__":
     parser.addRulesFilterArguments()
     parser.addKaleSettingsArguments()
     parser.addAmarSettingsArguments()
+    parser.addElliotSettingsArguments()
 
     (datasetFolderName, args) = parser.parse()
 
@@ -67,5 +72,6 @@ if __name__ == "__main__":
     kaleSettings = KaleSettings(args)
     rulesFilter = RulesFilter(args)
     amarSettings = AmarSettings(args)
+    elliotSettings = ElliotSettings(args)
 
-    forEachEmbeddingDimension(kaleSettings, lambda kaleSettings, dim: runElliot(datasetFolderName, rulesFilter, kaleSettings, amarSettings, dim, amieSettings))
+    forEachEmbeddingDimension(kaleSettings, lambda kaleSettings, dim: runElliot(datasetFolderName, rulesFilter, kaleSettings, amarSettings, elliotSettings, dim, amieSettings))

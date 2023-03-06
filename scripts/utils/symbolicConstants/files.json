@@ -14,6 +14,8 @@
     "TRAIN_USER_ITEM": "train_user-item.tsv",
     "TEST_USER_ITEM": "test_user-item.tsv",
 
+    "MAPPING_PROPS": "mapping_props.tsv",
+    "MAPPING_USERS": "mapping_users.tsv",
     "MAPPING_ITEMS": "mapping_items.tsv",
     "MAPPING_RELATIONS": "mapping_relations.tsv",
 
@@ -46,5 +48,9 @@
     "KALE_SETTINGS": "kaleSettings.json",
     "AMIE_SETTINGS": "amieSettings.json",
     "AMAR_SETTINGS": "amarSettings.json",
-    "AMAR_TEST_LIKE_ONLY": "amar_test_like_only.tsv"
+    "ELLIOT_ARG_SETTINGS": "elliotSettings.json",
+
+    "AMAR_TEST_LIKE_ONLY": "amar_test_like_only.tsv",
+
+    "AMAR_ALL_ITEMS": "amar_all_items.tsv"
 }

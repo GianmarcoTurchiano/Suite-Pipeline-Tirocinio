@@ -4,11 +4,13 @@ from pathlib import Path
 import yaml
 from elliot.run import run_experiment
 from utils.arguments import Arguments
-from utils.paths import folderNames, fileNames, getComparisonsElliotFolderPath, getComparisonsElliotSettingsFilePath, getComparisonsPredictionsFolderPath, getNoRulesEmbeddingsFolderPath, getComparisonsFolderPath, getUserItemAmarTestLikeOnlyFilePath, getUserItemAmarTrainFilePath, getWithRulesFolderPath
+from utils.paths import  getUserItemAmarAllItemsFilePath, folderNames, fileNames, getComparisonsElliotFolderPath, getComparisonsElliotSettingsFilePath, getComparisonsPredictionsFolderPath, getNoRulesEmbeddingsFolderPath, getComparisonsFolderPath, getUserItemAmarTestLikeOnlyFilePath, getUserItemAmarTrainFilePath, getWithRulesFolderPath
 from shutil import copyfile
 
 # TODO: Considerare tutte le cartelle "maxad", non solo la prima individuata
 # Nel tirocinio si è eseguito AMIE solo una volta per dataset, quindi la prima cartella "maxad" che si individua è anche l'unica esistente.
+
+# TODO: sinceramente, questo script sarebbe completamente da ripensare, ma per il momento funziona
 
 def exploreEmbeddingsFolder(datasetFolderName: str, embeddingsFolderPath: Path, rulesSubsetName: str):
     folders = os.listdir(embeddingsFolderPath)
@@ -87,12 +89,18 @@ if __name__ == "__main__":
     withRules(datasetFolderName)
 
     amarTrainPath = getUserItemAmarTrainFilePath(datasetFolderName)
-    amarTestPath = getUserItemAmarTestLikeOnlyFilePath(datasetFolderName)
 
     for dimension in os.listdir(comparisonsFolderPath):
         dimensionFolder = Path(comparisonsFolderPath, dimension)
 
         for top in os.listdir(dimensionFolder):
+            tokens = top.split("_")
+            
+            if(len(tokens) == 2):
+                amarTestPath = getUserItemAmarAllItemsFilePath(datasetFolderName)
+            else:
+                amarTestPath = getUserItemAmarTestLikeOnlyFilePath(datasetFolderName)
+
             predictionsFolder = getComparisonsPredictionsFolderPath(datasetFolderName, dimension, top)
             elliotFolder = getComparisonsElliotFolderPath(datasetFolderName, dimension, top)
 
@@ -120,7 +128,7 @@ if __name__ == "__main__":
                             "folder": str(predictionsFolder)
                         }
                     },
-                    "top_k": int(top.split("top")[1])
+                    "top_k": int(tokens[0].split("top")[1])
                 }
             }
 

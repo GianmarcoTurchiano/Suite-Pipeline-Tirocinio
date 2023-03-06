@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 import subprocess
 from utils.arguments import Arguments
-from utils.paths import getUserItemAmarTestFilePath, getUserItemAmarTestLikeOnlyFilePath, getUserItemAmarTrainFilePath, getUserItemKaleTestFilePath, getUserItemKaleTrainFilePath, getUserItemKaleValidFilePath, getUserItemEntityIDFilePath, getUserItemRelationIDFilePath, getUserItemTrainFilePath, getUserItemTestFilePath, getUserItemValidFilePath, getUserItemFolderPath, getUserItemPropAmarTestFilePath, getUserItemPropAmarTrainFilePath, CONVERT_DATA_FORM_FILE_PATH, getUserItemPropKaleTrainFilePath, getUserItemPropKaleValidFilePath, getUserItemPropKaleTestFilePath, getUserItemPropTrainFilePath, getUserItemPropValidFilePath, getUserItemPropTestFilePath, getUserItemPropEntityIDFilePath, getUserItemPropRelationIDFilePath
+from utils.paths import getUserItemAmarAllItemsFilePath, getMappingUsersFilePath, getMappingItemsFilePath, getUserItemAmarTestFilePath, getUserItemAmarTestLikeOnlyFilePath, getUserItemAmarTrainFilePath, getUserItemKaleTestFilePath, getUserItemKaleTrainFilePath, getUserItemKaleValidFilePath, getUserItemEntityIDFilePath, getUserItemRelationIDFilePath, getUserItemTrainFilePath, getUserItemTestFilePath, getUserItemValidFilePath, getUserItemFolderPath, getUserItemPropAmarTestFilePath, getUserItemPropAmarTrainFilePath, CONVERT_DATA_FORM_FILE_PATH, getUserItemPropKaleTrainFilePath, getUserItemPropKaleValidFilePath, getUserItemPropKaleTestFilePath, getUserItemPropTrainFilePath, getUserItemPropValidFilePath, getUserItemPropTestFilePath, getUserItemPropEntityIDFilePath, getUserItemPropRelationIDFilePath
 from utils.symbols import rulesExcelSymbols, USER_ITEM_RELATIONSHIPS_LABELS
 import pandas as pd
 from utils.mappingRelations import getMappingRelationsLabelsToIDs
@@ -62,23 +62,28 @@ def initDataset(datasetFolderName: str):
     relationshipsIDs = getMappingRelationsLabelsToIDs(datasetFolderName)
     
     likeRelationshipID = relationshipsIDs[rulesExcelSymbols.LIKE_RELATIONSHIP_LABEL]
-    userItemRelationshipIDs = [likeRelationshipID]
+    dislikeRelationshipID = relationshipsIDs[rulesExcelSymbols.DISLIKE_RELATIONSHIP_LABEL]
+
+    userItemRelationshipIDs = [likeRelationshipID, dislikeRelationshipID]
 
     for label in USER_ITEM_RELATIONSHIPS_LABELS:
         if label in relationshipsIDs:
             userItemRelationshipIDs.append(relationshipsIDs[label])
 
-    KALE_FILE_RELATIONSHIP_COLUMN_INDEX = 1
-    AMAR_FILE_RELATIONSHIP_COLUMN_INDEX = 2
+    KALE_RELATIONSHIP_COLUMN = 1
 
-    _filterTriples(uipKaleTrainPath, userItemRelationshipIDs, KALE_FILE_RELATIONSHIP_COLUMN_INDEX, uiKaleTrainPath)
-    _filterTriples(uipKaleValidPath, userItemRelationshipIDs, KALE_FILE_RELATIONSHIP_COLUMN_INDEX, uiKaleValidPath)
-    _filterTriples(uipKaleTestPath, userItemRelationshipIDs, KALE_FILE_RELATIONSHIP_COLUMN_INDEX, uiKaleTestPath)
+    AMAR_USER_COLUMN = 0
+    AMAR_ITEM_COLUMN = 1
+    AMAR_RELATIONSHIP_COLUMN = 2
+
+    _filterTriples(uipKaleTrainPath, userItemRelationshipIDs, KALE_RELATIONSHIP_COLUMN, uiKaleTrainPath)
+    _filterTriples(uipKaleValidPath, userItemRelationshipIDs, KALE_RELATIONSHIP_COLUMN, uiKaleValidPath)
+    _filterTriples(uipKaleTestPath, userItemRelationshipIDs, KALE_RELATIONSHIP_COLUMN, uiKaleTestPath)
     
-    _filterTriples(uipAmarTrainPath, userItemRelationshipIDs, AMAR_FILE_RELATIONSHIP_COLUMN_INDEX, uiAmarTrainPath)
+    _filterTriples(uipAmarTrainPath, userItemRelationshipIDs, AMAR_RELATIONSHIP_COLUMN, uiAmarTrainPath)
 
-    _filterTriples(uipAmarTestPath, userItemRelationshipIDs, AMAR_FILE_RELATIONSHIP_COLUMN_INDEX, uiAmarTestPath)
-    _filterTriples(uipAmarTestPath, [likeRelationshipID], AMAR_FILE_RELATIONSHIP_COLUMN_INDEX, uiAmarTestPathLikeOnly)
+    _filterTriples(uipAmarTestPath, userItemRelationshipIDs, AMAR_RELATIONSHIP_COLUMN, uiAmarTestPath)
+    _filterTriples(uipAmarTestPath, [likeRelationshipID], AMAR_RELATIONSHIP_COLUMN, uiAmarTestPathLikeOnly)
 
     uiTrainPath = getUserItemTrainFilePath(datasetFolderName)
     uiValidPath = getUserItemValidFilePath(datasetFolderName)
@@ -93,6 +98,46 @@ def initDataset(datasetFolderName: str):
     print(f"New file: {uiTestPath}")
     print(f"New file: {uiEntityIDPath}")
     print(f"New file: {uiRelationIDPath}")
+
+    allItemsPath = getUserItemAmarAllItemsFilePath(datasetFolderName)
+
+    test = pd.read_csv(uiAmarTestPath, sep="\t", header=None)
+    train = pd.read_csv(uiAmarTrainPath, sep="\t", header=None)
+
+    test.to_csv(allItemsPath, sep="\t", mode="w", header=None, index=None)
+
+    usersSet = set(test[AMAR_USER_COLUMN].append(train[AMAR_USER_COLUMN]))
+    itemsSet = set(test[AMAR_ITEM_COLUMN].append(train[AMAR_ITEM_COLUMN]))
+
+    print(f"Users: {len(usersSet)}; Items: {len(itemsSet)}")
+
+    maxCount = 0
+
+    for user in usersSet:
+        userTrainItemsSet = set(train[train[AMAR_USER_COLUMN] == user][AMAR_ITEM_COLUMN])
+        userTestItemsSet = set(test[test[AMAR_USER_COLUMN] == user][AMAR_ITEM_COLUMN])
+        userItemsSet = itemsSet - userTrainItemsSet - userTestItemsSet
+
+        count = len(userItemsSet) + len(userTestItemsSet)
+
+        print(f"User {user}: {count} items")
+
+        maxCount = count if count > maxCount else maxCount
+
+        missingItems = pd.DataFrame(columns=[AMAR_USER_COLUMN, AMAR_ITEM_COLUMN, AMAR_RELATIONSHIP_COLUMN])
+
+        for item in userItemsSet:
+            record = [None] * 3
+            record[AMAR_USER_COLUMN] = user
+            record[AMAR_ITEM_COLUMN] = item
+            record[AMAR_RELATIONSHIP_COLUMN] = dislikeRelationshipID    
+            missingItems.loc[len(missingItems)] = record
+        
+        missingItems.to_csv(allItemsPath, sep="\t", mode="a", header=None, index=None)
+
+    print(f"Max items: {maxCount}")
+
+    print(f"New file: {allItemsPath}")
 
 if __name__ == "__main__":
     parser = Arguments()

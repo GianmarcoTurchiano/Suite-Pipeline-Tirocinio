@@ -1,8 +1,8 @@
 import os
 from pathlib import Path
 
-from utils.arguments import AmieSettings, KaleSettings, RulesFilter
-from utils.symbols import getAmarTopKFolderName, getKaleDimensionFolderName, fileNames, folderNames, rulesExcelSymbols, USER_ITEM_FOLDER_NAME, USER_ITEM_PROP_FOLDER_NAME
+from utils.arguments import AmieSettings, KaleSettings, RulesFilter, AmarSettings
+from utils.symbols import getAmarTopKFolderName, getKaleDimensionFolderName, fileNames, folderNames, rulesExcelSymbols, USER_ITEM_FOLDER_NAME, USER_ITEM_PROP_FOLDER_NAME, ALL_ITEMS_FLAG
 from utils.common import BASE_FOLDER_PATH, getUtilsFolderPath
 
 def getJarsFolderPath(*argv):
@@ -36,6 +36,9 @@ def getUserItemPropAmarTrainFilePath(datasetFolderName: str):
 
 def getUserItemPropAmarTestFilePath(datasetFolderName: str):
     return getUserItemPropFolderPath(datasetFolderName, fileNames.AMAR_TEST)
+
+def getUserItemAmarAllItemsFilePath(datasetFolderName: str):
+    return getUserItemFolderPath(datasetFolderName, fileNames.AMAR_ALL_ITEMS)
 
 def getUserItemAmarTrainFilePath(datasetFolderName: str):
     return getUserItemFolderPath(datasetFolderName, fileNames.AMAR_TRAIN)
@@ -147,6 +150,15 @@ def getAMIEOutputFilePath(datasetFolderName: str, amieSettings: AmieSettings):
 def getMappingRelationsFilePath(datasetFolderName: str):
     return getDatasetFolderPath(datasetFolderName, fileNames.MAPPING_RELATIONS)
 
+def getMappingUsersFilePath(datasetFolderName: str):
+    return getDatasetFolderPath(datasetFolderName, fileNames.MAPPING_USERS)
+
+def getMappingItemsFilePath(datasetFolderName: str):
+    return getDatasetFolderPath(datasetFolderName, fileNames.MAPPING_ITEMS)
+
+def getMappingPropsFilePath(datasetFolderName: str):
+    return getDatasetFolderPath(datasetFolderName, fileNames.MAPPING_PROPS)
+
 def getNoRulesFolderPath(datasetFolderName: str, *argv):
     return getDatasetFolderPath(datasetFolderName, folderNames.NO_RULES, *argv)
 
@@ -188,24 +200,28 @@ def getModelFilePath(datasetFolderName: str, amieSettings: AmieSettings, rulesFi
 def getPredictionsFolderPath(datasetFolderName: str, amieSettings: AmieSettings, rulesFilter: RulesFilter, kaleSettings: KaleSettings, dimension: int, *argv):
     return getEmbeddingsConfigurationDimensionFolderPath(datasetFolderName, amieSettings, rulesFilter, kaleSettings, dimension, folderNames.PREDICTIONS, *argv)
 
-def getTopPredictionsFolderPath(datasetFolderName: str, amieSettings: AmieSettings, rulesFilter: RulesFilter, kaleSettings: KaleSettings, dimension: int, topK: int, *argv):
+def getTopPredictionsFolderPath(datasetFolderName: str, amieSettings: AmieSettings, rulesFilter: RulesFilter, kaleSettings: KaleSettings, amarSettings: AmarSettings, dimension: int, topK: int, *argv):
     topKStr = getAmarTopKFolderName(topK)
+
+    if amarSettings.allItems:
+        topKStr += f"_{ALL_ITEMS_FLAG}"
+
     return getPredictionsFolderPath(datasetFolderName, amieSettings, rulesFilter, kaleSettings, dimension, topKStr, *argv)
 
-def getPredictions1FilePath(datasetFolderName: str, amieSettings: AmieSettings, rulesFilter: RulesFilter, kaleSettings: KaleSettings, dimension: int, topK: int):
-    return getTopPredictionsFolderPath(datasetFolderName, amieSettings, rulesFilter, kaleSettings, dimension, topK, fileNames.PREDICTIONS_1)
+def getPredictions1FilePath(datasetFolderName: str, amieSettings: AmieSettings, rulesFilter: RulesFilter, kaleSettings: KaleSettings, amarSettings: AmarSettings, dimension: int, topK: int):
+    return getTopPredictionsFolderPath(datasetFolderName, amieSettings, rulesFilter, kaleSettings, amarSettings, dimension, topK, fileNames.PREDICTIONS_1)
 
-def getElliotFolderPath(datasetFolderName: str, amieSettings: AmieSettings, rulesFilter: RulesFilter, kaleSettings: KaleSettings, dimension: int, topK: int, *argv):
-    return getTopPredictionsFolderPath(datasetFolderName, amieSettings, rulesFilter, kaleSettings, dimension, topK, folderNames.ELLIOT, *argv)
+def getElliotFolderPath(datasetFolderName: str, amieSettings: AmieSettings, rulesFilter: RulesFilter, kaleSettings: KaleSettings, amarSettings: AmarSettings, dimension: int, topK: int, *argv):
+    return getTopPredictionsFolderPath(datasetFolderName, amieSettings, rulesFilter, kaleSettings, amarSettings, dimension, topK, folderNames.ELLIOT, *argv)
 
-def getElliotOutputFolderPath(datasetFolderName: str, amieSettings: AmieSettings, rulesFilter: RulesFilter, kaleSettings: KaleSettings, dimension: int, topK: int, *argv):
-    return getElliotFolderPath(datasetFolderName, amieSettings, rulesFilter, kaleSettings, dimension, topK, folderNames.ELLIOT_OUTPUT, *argv)
+def getElliotOutputFolderPath(datasetFolderName: str, amieSettings: AmieSettings, rulesFilter: RulesFilter, kaleSettings: KaleSettings, amarSettings: AmarSettings, dimension: int, topK: int, *argv):
+    return getElliotFolderPath(datasetFolderName, amieSettings, rulesFilter, kaleSettings, amarSettings, dimension, topK, folderNames.ELLIOT_OUTPUT, *argv)
 
-def getElliotResultsFolderPath(datasetFolderName: str, amieSettings: AmieSettings, rulesFilter: RulesFilter, kaleSettings: KaleSettings, dimension: int, topK: int, *argv):
-    return getTopPredictionsFolderPath(datasetFolderName, amieSettings, rulesFilter, kaleSettings, dimension, topK, folderNames.ELLIOT_RESULTS, *argv)
+def getElliotResultsFolderPath(datasetFolderName: str, amieSettings: AmieSettings, rulesFilter: RulesFilter, kaleSettings: KaleSettings, amarSettings: AmarSettings, dimension: int, topK: int, *argv):
+    return getTopPredictionsFolderPath(datasetFolderName, amieSettings, rulesFilter, kaleSettings, amarSettings, dimension, topK, folderNames.ELLIOT_RESULTS, *argv)
 
-def getElliotSettingsFilePath(datasetFolderName: str, amieSettings: AmieSettings, rulesFilter: RulesFilter, kaleSettings: KaleSettings, dimension: int, topK: int):
-    return getElliotFolderPath(datasetFolderName, amieSettings, rulesFilter, kaleSettings, dimension, topK, fileNames.ELLIOT_SETTINGS)
+def getElliotSettingsFilePath(datasetFolderName: str, amieSettings: AmieSettings, rulesFilter: RulesFilter, kaleSettings: KaleSettings, amarSettings: AmarSettings, dimension: int, topK: int):
+    return getElliotFolderPath(datasetFolderName, amieSettings, rulesFilter, kaleSettings, amarSettings, dimension, topK, fileNames.ELLIOT_SETTINGS)
 
 def getComparisonsFolderPath(datasetFolderName: str, *argv):
     return getDatasetFolderPath(datasetFolderName, folderNames.COMPARISONS, *argv)

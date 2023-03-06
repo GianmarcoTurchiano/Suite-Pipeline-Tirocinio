@@ -15,8 +15,7 @@ fileNames = _loadSymbolsIntoNamespace(FILES_FILE_NAME)
 folderNames = _loadSymbolsIntoNamespace(FOLDER_FILE_NAME)
 rulesExcelSymbols = _loadSymbolsIntoNamespace(RULES_EXCEL_SYMBOLS_FILE_NAME)
 
-USER_ITEM_RELATIONSHIPS_LABELS = [rulesExcelSymbols.DISLIKE_RELATIONSHIP_LABEL] # "like" è esclusa. Poiché fondamentale, è data per scontata: in questa lista ci sono le ALTRE relazioni user-item
-# TODO parametrizzare questa lista e assegnare al parametro valore di default ["dislike"], in modo che gli utenti degli script possano indicare altre relazioni user-item
+USER_ITEM_RELATIONSHIPS_LABELS = [] # "like" e "dislike" sono esclusi. Poiché fondamentali, si danno per scontati: in questa lista ci sono le ALTRE relazioni user-item
 
 DATASET_FOLDER_NAME_KEY = "datasetFolderName"
 
@@ -50,6 +49,9 @@ MIN_FUNCTIONAL_VARIABLE_FLAG = "minFunctionalVariable"
 LIKE_ONLY_FLAG = "likeInHead"
 
 TOP_K_FLAG = "top"
+ALL_ITEMS_FLAG = "allItems"
+
+CUTOFF_FLAG = "cutoff"
 
 #TODO ^mettere in dei file JSON anche tutti questi simboli (e pure messaggi "help="?)
 
